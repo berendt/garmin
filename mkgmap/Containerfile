@@ -1,0 +1,26 @@
+# based on https://github.com/devshred/mkgmap-docker
+
+FROM ubuntu:20.04 AS builder
+
+ARG MKGMAP_VERSION=r4897
+ARG SPLITTER_VERSION=r647
+
+WORKDIR /build
+RUN apt-get update \
+    && apt-get install -y wget unzip \
+    && wget http://www.mkgmap.org.uk/download/mkgmap-$MKGMAP_VERSION.zip \
+    && unzip mkgmap-$MKGMAP_VERSION.zip \
+    && mv mkgmap-$MKGMAP_VERSION mkgmap \
+    && wget http://www.mkgmap.org.uk/download/splitter-$SPLITTER_VERSION.zip \
+    && unzip splitter-$SPLITTER_VERSION.zip \
+    && mv splitter-$SPLITTER_VERSION splitter
+
+FROM openjdk:11-jre-slim
+COPY --from=builder /build/mkgmap /mkgmap
+COPY --from=builder /build/splitter /splitter
+
+ADD files/process.sh /process.sh
+ADD files/ahfenix.typ /ahfenix.typ
+VOLUME /data
+
+CMD /process.sh
